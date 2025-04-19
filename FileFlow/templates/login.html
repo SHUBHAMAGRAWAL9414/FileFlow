@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - LAN File Sharing</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <i class="fas fa-network-wired"></i>
+        </div>
+        <h1>LAN File Sharing</h1>
+        
+        <div class="auth-form" id="loginForm">
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" id="loginUsername" placeholder="Username" autofocus>
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="loginPassword" placeholder="Password">
+            </div>
+            <button id="loginBtn" class="btn-primary">
+                <i class="fas fa-sign-in-alt"></i> Login
+            </button>
+            <p class="auth-toggle">Don't have an account? <a href="#" id="showRegister">Register</a></p>
+            <div id="errorMessage" class="error-message"></div>
+        </div>
+        
+        <div class="auth-form" id="registerForm" style="display: none;">
+            <div class="input-group">
+                <i class="fas fa-user"></i>
+                <input type="text" id="registerUsername" placeholder="Username">
+            </div>
+            <div class="input-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" id="registerPassword" placeholder="Password">
+            </div>
+            <button id="registerBtn" class="btn-primary">
+                <i class="fas fa-user-plus"></i> Register
+            </button>
+            <p class="auth-toggle">Already have an account? <a href="#" id="showLogin">Login</a></p>
+            <div id="errorMessage" class="error-message"></div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            // Toggle between login and register forms
+            document.getElementById('showRegister').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('registerForm').style.display = 'block';
+                document.getElementById('errorMessage').textContent = '';
+            });
+            
+            document.getElementById('showLogin').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('registerForm').style.display = 'none';
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('errorMessage').textContent = '';
+            });
+            
+            // Handle login
+            document.getElementById('loginBtn').addEventListener('click', handleLogin);
+            document.getElementById('loginPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') handleLogin();
+            });
+            
+            // Handle register
+            document.getElementById('registerBtn').addEventListener('click', handleRegister);
+            document.getElementById('registerPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') handleRegister();
+            });
+            
+            async function handleLogin() {
+                const username = document.getElementById('loginUsername').value;
+                const password = document.getElementById('loginPassword').value;
+                const errorElement = document.getElementById('errorMessage');
+                
+                if (!username || !password) {
+                    errorElement.textContent = 'Please enter both username and password';
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            password: password
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Login failed');
+                    }
+                    
+                    // Redirect to main app on successful login
+                    window.location.href = '/';
+                } catch (error) {
+                    errorElement.textContent = error.message;
+                }
+            }
+            
+            async function handleRegister() {
+                const username = document.getElementById('registerUsername').value;
+                const password = document.getElementById('registerPassword').value;
+                const errorElement = document.getElementById('errorMessage');
+                
+                if (!username || !password) {
+                    errorElement.textContent = 'Please enter both username and password';
+                    return;
+                }
+                
+                if (password.length < 6) {
+                    errorElement.textContent = 'Password must be at least 6 characters';
+                    return;
+                }
+                
+                try {
+                    const response = await fetch('/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            username: username,
+                            password: password
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Registration failed');
+                    }
+                    else{
+                        window.location.href = '/';
+                    }
+                    
+                    // Auto-login after successful registration
+                    await handleLogin();
+                } catch (error) {
+                    errorElement.textContent = error.message;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
